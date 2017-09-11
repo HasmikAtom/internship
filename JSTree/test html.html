@@ -1,0 +1,47 @@
+<!DOCTYPE HTML>
+<html>
+<head>
+<style>
+div {
+    float: left;
+    width: 100px;
+    height: 35px;
+    margin: 10px;
+    padding: 10px;
+    border: 1px solid black;
+}
+</style>
+<script>
+function allowDrop(ev) {
+    ev.preventDefault();
+}
+
+function drag(ev) {
+  ev.target.setAttribute("id", "blah")
+    ev.dataTransfer.setData("text", ev.target.id);
+    console.log(ev.target.attributes)
+}
+
+function drop(ev) {
+    ev.preventDefault();
+    var data = ev.dataTransfer.getData("text");
+    console.log(data)
+    console.log(ev.target.id)
+    ev.target.appendChild(document.getElementById(data));
+
+}
+</script>
+</head>
+<body>
+
+<h2>Drag and Drop</h2>
+<p>Drag the image back and forth between the two div elements.</p>
+
+<div ondrop="drop(event)" ondragover="allowDrop(event)">
+  <img src="jo.jpg" draggable="true" ondragstart="drag(event)"  width="88" height="31" alt="image">
+</div>
+
+<div ondrop="drop(event)" ondragover="allowDrop(event)"></div>
+
+</body>
+</html>

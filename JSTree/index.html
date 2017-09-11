@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="utf-8">
+    <title></title>
+  </head>
+  <body>
+    <section id="root">
+
+    </section>
+
+    <script type="text/javascript">
+        const getTarget = () => {
+          if(!this.event.target) return 0
+          return this.event.target; //returns button
+        }
+        const getParent = (currentTarget) => {
+          if(!currentTarget.parentNode) return 0;
+          return currentTarget.parentNode; // returns div
+        }
+        const getSibling = (parent) => {
+          if(!parent.nextSibling) return 0;
+          return parent.nextSibling; // returns ul
+        }
+        const getChild = (sibling) => {
+          if(!sibling.childNodes) return 0;
+          return sibling.childNodes; // return li elements
+        }
+        const getGrandparent = (parent) =>{
+          if(!parent.parentNode) return 0;
+          return parent.parentNode;
+        }
+
+        function allowDrop(ev){ // ondragover goes into where the item is supposed to drop
+          ev.preventDefault();
+        }
+        function drag(ev){ //ondragstart goes on the item being dragged
+          ev.target.setAttribute("id","dragthis_" + Math.floor(Math.random() * 100) + 1 )
+          let test = ev.dataTransfer.setData("text", ev.target.id);// experiment
+          ev.target.style.cursor = 'move'; // TODO find how to change style of current element
+          ev.target.style.color = 'red';
+
+        }
+
+        function appendItems (parent, data){
+          let existingUl = null;
+          for(i=0; i<parent.childNodes.length; i++){
+            if(parent.childNodes[i] == 'ul'){
+              existingUl = parent.childNodes[i];
+            }
+          }
+          if(existingUl !== null){
+            existingUl.appendChild(data);
+          } else {
+            let ul = document.createElement('ul');
+            parent.appendChild(ul);
+            parent.lastChild.appendChild(data);
+          }
+        }
+
+        function drop(ev){ //NOTE check error dropping on itself
+          ev.preventDefault(); //ondrop goes into where the target is supposed to be dropped
+          var data = document.getElementById(ev.dataTransfer.getData("text"));
+
+          if(ev.target.tagName == 'UL') {
+
+              appendItems(ev.target.childNodes[0], data);
+
+          } else if(ev.target.tagName == 'LI') {
+
+              appendItems(ev.target, data);
+
+          } else if(ev.target.tagName == 'DIV') {
+
+              appendItems(ev.target.parentNode, data);
+
+          } else if(ev.target.tagName == 'H3') {
+
+              appendItems(ev.target.parentNode.parentNode, data);
+
+          } else if(ev.target.tagName == 'BUTTON') {
+
+              appendItems(ev.target.parentNode.parentNode, data);
+
+          } else console.log('else depq');
+
+        }
+
+
+        const createRoot = () =>{ // a function to wrap the section and ul together
+          let section = document.getElementById('root'); //getting the section
+          let ul = document.createElement('ul'); //creating the UL
+          createLeaf(ul, 0); //calling the createLeaf function, ul is parent
+          section.appendChild(ul); //appending the ul to the section
+          ul.addEventListener("drop", (event) => drop(event));
+          ul.addEventListener("dragover", (event) => allowDrop(event));
+        }
+
+        const createLeaf = (parent, level) => { // wrapping the branch that needs repeating
+          let li = document.createElement('li');
+          let div = document.createElement('div');
+          let h3 = document.createElement('h3');
+          let add = document.createElement('button');
+          let close = document.createElement('button');
+          let remove = document.createElement('button');
+          let removeAll = document.createElement('button');
+
+          h3.innerHTML = `Tree-${level}`; // == 'Tree-' + level
+          add.innerHTML = 'Add';
+          close.innerHTML = 'Close';
+          remove.innerHTML = 'Remove';
+          removeAll.innerHTML = 'Remove All';
+
+          add.addEventListener('click', () => addLeaf(level));
+          close.addEventListener('click', () => closeBranch(level));
+          remove.addEventListener('click', () => removeBranch(level));
+          removeAll.addEventListener('click', () => removeBranches(level));
+
+          div.appendChild(h3);
+          div.appendChild(add);
+          div.appendChild(close);
+          div.appendChild(remove);
+          div.appendChild(removeAll)
+          li.appendChild(div);
+
+          parent.appendChild(li); // parent is the variable declared in createLeaf
+
+          //li.setAttribute("draggable","true");
+          li.draggable="true";
+          li.addEventListener("dragstart", (event) => drag(event) );//right way
+          //console.log(li)
+          //li.ondragstart="drag(event)"; //didnt bring up in attributes after logging
+        }
+
+        const addLeaf = (level) => {
+          // let currentTarget = this.event.target;
+          // let parent = currentTarget.parentNode;
+          // console.log(level);
+
+          let button = getTarget(); //button
+          let parent = getParent(button); //div
+
+          const nextLevel = ++level;
+
+          if(parent.nextSibling){ //checking if div has a next sibling
+            const ul = parent.nextSibling; //appended to next sibling
+            createLeaf(ul,nextLevel);
+            // ul.addEventListener("drop", (event) => drop(event));
+            // ul.addEventListener("dragover", (event) => allowDrop(event));
+
+          }else{
+            let ul = document.createElement('ul'); //otherwise, created next sibling
+            createLeaf(ul, nextLevel); //created branch with that new sibling
+            parent.parentNode.appendChild(ul);
+            // ul.addEventListener("drop", (event) => drop(event));
+            // ul.addEventListener("dragover", (event) => allowDrop(event));
+          }
+
+
+        }
+
+        const closeBranch = () =>{
+          // let currentTarget = this.event.target; //getting the current target
+          // let parent = currentTarget.parentNode; //getting the div parent
+          // let ulSibling = parent.nextSibling; // getting the ul that needs hiding
+
+          let button = getTarget(); //button
+          let parent = getParent(button); //div
+          let sibling = getSibling(parent); //ul
+
+            if(sibling.style.display === 'none'){
+              sibling.style.display = 'block';
+              button.innerHTML = 'Close';
+            }else{
+              sibling.style.display = 'none';
+              button.innerHTML = 'Open';
+            }
+
+             // ASK ABOUT THE CODE BELOW!!!!
+
+             // write disable in else
+
+            // if(ulSibling){ //WHY CREATE IF AND PUT ANOTHER IF ELSE IN IT
+            // let display = ulSibling.style.display; //WHY CREATE A VARIABLE
+            //
+            //   if (display == 'block') {
+            //     ulSibling.style.display = 'none';
+            //   }else{
+            //     ulSibling.style.display = 'block';
+            //   }
+            //
+            // } // unknown if closing brake
+
+            // CODE BELOW CLOSED THE SAME ELEMENT NOT THE BRANCH/CHILD ELEMENT
+
+          // let currentTarget = this.event.target; //to get current target, button
+          // let parent = currentTarget.parentNode; // to get the parent of the target, div
+          // let children = parent.childNodes; //getting children of the div,h3 and buttons
+          // console.log()
+          //
+          // // let parent = parent.childNode;
+          // for(var i=0; i<children.length; i++){ //loop that goes through children and changes display
+          //
+          //   if (children[i].style.display = 'block'){
+          //     children[i].style.display = 'none';
+          //     currentTarget.innerHTML = 'Open';
+          //   }else{
+          //     children[i].style.display = 'block';
+          //   }
+          //
+          // }
+
+        } // end bracket of closBranch function
+
+        const removeBranch = (level) => {
+          // let currentTarget = this.event.target; //button
+          // let parent = currentTarget.parentNode; // div
+          // let grandparent = parent.parentNode // li parent element that contains both div and ul
+          // let ulSibling = parent.nextSibling; // ul sibling that needs to be removed
+          // let liChild = ulSibling.childNodes; // getting the li element to remove below
+
+          let button = getTarget(); //button
+          let parent = getParent(button); //div
+          let sibling = getSibling(parent); //ul
+          let children = getChild(sibling); // li elements
+
+
+          if (children.length) {
+            sibling.removeChild(children[children.length-1]); // REMOVES li elements
+          }else{
+            button.disable = true;
+          }
+
+        }
+        //ADD A BUTTON TO REMOVE ALL ELEMENTS
+
+        const removeBranches = (level) => {
+          // let currentTarget = this.event.target; //button
+          // let parent = currentTarget.parentNode; // div
+          // let grandparent = parent.parentNode // li
+          // let ulSibling = parent.nextSibling; // ul node
+
+          let button = getTarget(); // button
+          let parent = getParent(button); //div
+          let sibling = getSibling(parent); //ul
+          let children = getChild(sibling); // li elements
+          let grandparent = getGrandparent(parent); // div parent li
+
+          if (sibling) {
+            grandparent.removeChild(sibling);
+          }else {
+            button.disable = true;
+          }
+        }
+        //WRONG!!!
+        // function allowDrag(li){
+        //   li = this.event.target;
+        //   li.setAttribute("draggable", "true");
+        // }
+
+        // addEventListener("click", allowDrag());
+        // var li = document.getElementsByTagName("li");
+        // console.log(li)
+        // li.onclick = function(){li.setAttribute("draggable", "true")}
+
+        createRoot();
+
+    </script>
+  </body>
+</html>
